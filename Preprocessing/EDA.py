@@ -72,9 +72,9 @@ class Eda:
             try:
                 d3.to_csv(file_path, index=False)
             except Exception as e:
-                print("data save failed duo to: ", e)
+                print("data saving failed due to: ", e)
             else:
-                print("%s save succeed" % (file_name))
+                print("%s saving succeed" % (file_name))
 
         
 
@@ -100,9 +100,9 @@ class Eda:
         try:
             d1.to_csv(file_path, index=False)
         except Exception as e:
-            print("data save failed duo to: ", e)
+            print("data saving failed due to: ", e)
         else:
-            print("data save succeed")
+            print("data saving succeed")
 
         # save to class
         self.df = d1
