@@ -19,9 +19,9 @@ class Eda:
     def __init__(self, raw_path="Raw_data") -> None:
         self._dirs = listdir(raw_path)
         self._raw_path = raw_path
-        self.df = self.fixdata()
+        self.df = self.__fixdata()
 
-    def fixdata(self):
+    def __fixdata(self):
         df_list = []
         for f in self._dirs:
             if "pairs" in f:
