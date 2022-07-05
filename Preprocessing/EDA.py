@@ -19,27 +19,37 @@ class Eda:
         self.df = self.fixdata()
 
     def fixdata(self):
-        df_list = []    
+        df_list = []
         for f in self._dirs:
             if "pairs" in f:
-                lines = open('%s\%s' % (self._raw_path,f), encoding='utf-8').read().strip().split('\n')
+                try:
+                    lines = open('%s\%s' % (self._raw_path, f),
+                                 encoding='utf-8').read().strip().split('\n')
+                except:
+                    lines = open('%s\%s' % (self._raw_path, f),
+                                 encoding='ISO-8859-1').read().strip().split('\n')
                 col_names = self.normalizeString(lines[0]).split("\t")
+                col_len = len(col_names)
                 df = pd.DataFrame()
                 lines = lines[1:]
                 for line in lines:
                     new_line = self.normalizeString(line)
                     line_split = new_line.split("\t")
+                    if len(line_split) != col_len:
+                        continue
                     new_line_df = pd.DataFrame([line_split], columns=col_names)
-                    df = pd.concat(df, new_line_df)
-                    
+                    df = pd.concat([df, new_line_df])
+                df_list.append(df)
+        combined_df = pd.concat(df_list)
+        return combined_df
 
     def info(self):
         # dataset info
-        self.d1.info()
+        self.df.info()
 
     def dataclean(self):
         # local var
-        d1 = self.d1
+        d1 = self.df
 
         # dataset info
         ori_rows = len(d1)
@@ -47,11 +57,11 @@ class Eda:
         # clean null
         d1 = d1.dropna()
         n_droped = ori_rows - len(d1)
-        print("{n_droped} rows has been droped")
+        print("%d rows has been droped" % (n_droped))
 
         # save dataset
         file_name = "cleaned.cbcsv"
-        file_path = Path("Dataset\{filename}")
+        file_path = Path("Dataset\%s" % (file_name))
         try:
             d1.to_csv(file_path, index=False)
         except Exception as e:
@@ -68,37 +78,20 @@ class Eda:
     def normalizeString(self, s):
         s = self.unicodeToAscii(s.lower().strip())
         s = re.sub(r"([.!?])", r" \1", s)           # Split .!? with words
-        s = re.sub(r"[^a-zA-Z.!?\t]+", r" ", s)       # Remove useless characters
+        # Remove useless characters
+        s = re.sub(r"[^a-zA-Z.!?\t]+", r" ", s)
         if s[0] == " ":
             s = s[1:]
         return s
 
-# main function
+# main function entry
 def run():
-    # # load files
-    # raw_path = "Raw_data"
-    # dirs = listdir(raw_path)
-
-    # # iter txt files
-    # df_list = []
-
-    # for f in dirs:
-    #     if ".txt" in f:
-    #         df = pd.read_csv("%s\%s" % (raw_path, f), delimiter="\t",
-    #                          on_bad_lines="skip", encoding="utf-8-sig")
-    #         df_list.append(df)
-
-    # # concat dataframes
-    # d1 = pd.concat(df_list)
-
-    # start task
     task = Eda()
-    task.eda()
+    task.info()
     task.dataclean()
 
-
-
-
-run()
+# OOP
+if __name__ == '__main__':
+    run()
 
 pass
