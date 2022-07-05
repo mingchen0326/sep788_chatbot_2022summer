@@ -1,4 +1,4 @@
-﻿ArticleTitle	Question	Answer	DifficultyFromQuestioner	DifficultyFromAnswerer	ArticleFile
+ArticleTitle	Question	Answer	DifficultyFromQuestioner	DifficultyFromAnswerer	ArticleFile
 Alessandro_Volta	Was Volta an Italian physicist?	yes	easy	easy	S09_set4_a10
 Alessandro_Volta	Was Volta an Italian physicist?	yes	easy	easy	S09_set4_a10
 Alessandro_Volta	Is Volta buried in the city of Pittsburgh?	no	easy	easy	S09_set4_a10
