@@ -49,5 +49,5 @@ train_df.shape
 
 # export cleaned dataset
 train_df.to_csv(r"Dataset\train_df.csv",encoding="utf-8")
-vail_df.to_csv(r"Dataset\vail_df.csv",encoding="utf-8")
+vail_df.to_csv(r"Dataset\eval_df.csv",encoding="utf-8")
 test_df.to_csv(r"Dataset\test_df.csv",encoding="utf-8")
