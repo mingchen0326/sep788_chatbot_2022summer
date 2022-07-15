@@ -3,17 +3,15 @@ from __future__ import unicode_literals, print_function, division
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from config import getConfig
+# from config import getConfig
 
 # configs
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-gConfig = getConfig.get_config()
-
 SOS_token = 0
 EOS_token = 1
-MAX_LENGTH = gConfig['max_length']
-units = gConfig['layer_size']
-BATCHSIZE = gConfig['batch_size']
+MAX_LENGTH = 10
+units = 256         # hidden layer size
+BATCHSIZE = 1
 criterion = nn.NLLLoss()
 
 # encoder method
