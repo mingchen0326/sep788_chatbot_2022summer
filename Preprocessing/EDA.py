@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# ©Fei, DO NOT USE WITHOUT LICENSED
+# ©Fei, DO NOT COPY WITHOUT LICENSED
 # Exploratory Data Analysis (EDC)
 
 # require
@@ -11,6 +11,7 @@ import codecs
 import unicodedata
 import re
 from torch.utils.data import random_split
+import pprint
 
 # main class
 
@@ -45,6 +46,37 @@ class Eda:
                 df_list.append(df)
         combined_df = pd.concat(df_list)
         return combined_df
+
+    def word_feq(self):
+        d3 = self.df
+        q_feq_dict = {}
+        a_feq_dict = {}
+
+        q_list = d3['question'].tolist()
+        a_list = d3['answer'].tolist()
+
+        for q in q_list:
+            if q in q_feq_dict:
+                q_feq_dict[q] += 1
+            else:
+                q_feq_dict[q] = 1
+
+        for a in a_list:
+            if a in a_feq_dict:
+                a_feq_dict[a] += 1
+            else:
+                a_feq_dict[a] = 1
+
+        q_feq_dict_sorted = sorted(q_feq_dict.items(), key=lambda x: x[1],reverse=True)
+        a_feq_dict_sorted = sorted(a_feq_dict.items(), key=lambda x: x[1],reverse=True)
+
+        pp = pprint.PrettyPrinter(depth=2)
+        print("Question frequence")
+        pp.pprint(q_feq_dict_sorted[:20])
+        print("Answer frequence")
+        pp.pprint(a_feq_dict_sorted[:20])
+
+        pass
 
     def split(self):
         d2 = self.df
@@ -132,7 +164,9 @@ def run():
     task = Eda()
     task.info()
     task.dataclean()
+    task.word_feq()
     task.split()
+    
 
 
 # OOP
