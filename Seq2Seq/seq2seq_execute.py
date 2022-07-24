@@ -70,8 +70,21 @@ def create_dataset(data):
         input_lang.addSentence(pair[0])
         output_lang.addSentence(pair[1])
 
+    return input_lang,output_lang,pairs
 
+# read data
+def read_data(data):
+    input_tensors=[]
+    target_tensors=[]
+    input_lang,target_lang,pairs=create_dataset(data)
+
+    for i in range(len(pairs)-1):
+        input_tensor = tensorFromSentence(input_lang, pairs[i][0])
+        target_tensor = tensorFromSentence(target_lang, pairs[i][1])
+        input_tensors.append(input_tensor)
+        target_tensors.append(target_tensor)
+    return input_tensors,input_lang,target_tensors,target_lang
 
 pass
 
-create_dataset(train_data_raw)
+read_data(train_data_raw)
