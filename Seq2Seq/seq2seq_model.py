@@ -107,3 +107,33 @@ def train_step(input_tensors, target_tensors, encoder, decoder, encoder_optimize
     encoder_optimizer.step()
     decoder_optimizer.step()
     return loss.item() / target_length
+
+
+
+def eval_step(input_tensors, target_tensors, encoder, decoder, encoder_optimizer, decoder_optimizer):
+    encoder_hidden = encoder.initHidden()
+    encoder_optimizer.zero_grad()
+    decoder_optimizer.zero_grad()
+    loss = 0
+    for i in range(BATCHSIZE):
+        input_tensor = input_tensors[i]
+        target_tensor = target_tensors[i]
+        input_length = input_tensor.size(0)
+        target_length = target_tensor.size(0)
+        encoder_outputs = torch.zeros(
+            MAX_LENGTH, encoder.hidden_size, device=device)
+        lenth_min = min(MAX_LENGTH, input_length)
+        for ei in range(lenth_min):
+            encoder_output, encoder_hidden = encoder(
+                input_tensor[ei], encoder_hidden)
+            encoder_outputs[ei] = encoder_output[0, 0]
+        decoder_input = torch.tensor([[SOS_token]], device=device)
+        decoder_hidden = encoder_hidden
+        for di in range(target_length):
+            decoder_output, decoder_hidden, decoder_attention = decoder(
+                decoder_input, decoder_hidden, encoder_outputs)
+            loss += (criterion(F.log_softmax(decoder_output, dim=1),
+                     target_tensor[di]))/BATCHSIZE
+            decoder_input = target_tensor[di]
+
+    return loss.item() / target_length
