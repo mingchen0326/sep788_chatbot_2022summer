@@ -24,7 +24,7 @@ test_data_raw = pd.read_csv("Dataset/test_df.csv")
 # model data structure
 SOS_token = 0   # start of sentence
 EOS_token = 1   # end of sentence
-MAX_LENGTH = 20
+MAX_LENGTH = 30
 
 
 class Lang:
@@ -48,6 +48,13 @@ class Lang:
         else:
             self.word2count[word] += 1
 
+    def addWord_pred(self, word):
+        if word not in self.word2index:
+            self.word2index[word] = self.n_words
+            self.word2count[word] = 1
+            self.index2word[self.n_words] = word
+            self.n_words += 1
+
     def showWords(self):
         words = self.word2index.keys()
         print(words)
@@ -66,8 +73,6 @@ def tensorFromSentence(lang, sentence):
 
 
 def preprocess_sentence(w):
-    w = 'start ' + w + ' end'
-    # print(w)
     return w
 
 
@@ -112,7 +117,8 @@ hidden_size = 256
 # train model
 
 
-def train(BATCH_SIZE=1, max_data=50000, min_loss=0.7):
+def train(BATCH_SIZE=1, max_data=50000, min_loss=0.2):
+    print("training...")
     steps_per_epoch = len(input_tensor) // BATCH_SIZE
     print(steps_per_epoch)
     checkpoint_dir = 'Seq2Seq'
@@ -131,7 +137,7 @@ def train(BATCH_SIZE=1, max_data=50000, min_loss=0.7):
         decoder.load_state_dict(checkpoint['modelB_state_dict'])
 
     total_loss = 0
-    batch_loss = 2
+    batch_loss = 1
     while batch_loss > min_loss:
         start_time_epoch = time.time()
         for i in tqdm(range(1, (max_data//BATCH_SIZE))):
@@ -140,12 +146,12 @@ def train(BATCH_SIZE=1, max_data=50000, min_loss=0.7):
             batch_loss = seq2seqModel.train_step(inp, targ, encoder, decoder, optim.SGD(
                 encoder.parameters(), lr=0.001), optim.SGD(decoder.parameters(), lr=0.01))
             total_loss += batch_loss
-            # print('训练总步数:{} 最新每步loss {:.4f}'.format(i, batch_loss))
+
         step_time_epoch = (time.time() - start_time_epoch) / steps_per_epoch
         step_loss = total_loss / steps_per_epoch
         current_steps = +steps_per_epoch
         step_time_total = (time.time() - start_time) / current_steps
-        print('训练总步数: {} 每步耗时: {}  最新每步耗时: {} 最新每步loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch,
+        print('Total Step: {} Time per Step: {}  Last Step Time: {} Last Step Loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch,
                                                                       batch_loss))
         torch.save({'modelA_state_dict': encoder.state_dict(),
                     'modelB_state_dict': decoder.state_dict()}, checkpoint_prefix)
@@ -165,6 +171,13 @@ def predict(sentence, model_path='Seq2Seq/model.pt'):
     # input_lang.showWords()
 
     sentence = preprocess_sentence(sentence)
+    sentence_list = []
+    for word in sentence.split(' '):            # remove words not in dict
+        if word in input_lang.word2index:
+            sentence_list.append(word)
+    
+    sentence_list = sentence_list[:MAX_LENGTH-1]        # cut sentence to max length
+    sentence = ' '.join(sentence_list)
     input_tensor = tensorFromSentence(input_lang, sentence)
 
     input_length = input_tensor.size()[0]
@@ -188,17 +201,33 @@ def predict(sentence, model_path='Seq2Seq/model.pt'):
         predicted_id, topi = predictions.data.topk(1)
 
         if topi.item() == EOS_token:
-            result += '<EOS>'
             break
         else:
             result += target_lang.index2word[topi.item()]+' '
         dec_input = topi.squeeze().detach()
-    print(result)
+    # print(result)
     return result
 
+def pred_datas(data, file_name):
+    input_data = data.loc[:, 'Question'].values.tolist()
+    full_data = data.loc[:, 'Question': "Answer"].values.tolist()
+    results = []
+    i = 0
+    print("predicting...")
+    for ask in tqdm(input_data):
+        result = predict(ask)
+        full_data[i] = full_data[i] + [result]
+        i += 1
+    full_data_df = pd.DataFrame(full_data)
+    full_data_df.columns = ['Question', 'Answer', 'Predictive Answer']
+    full_data_df.to_csv("Results/%s" % (file_name), index=False)
+    print("result save to %s" % (file_name))
+    pass
 
-pass
 
-train()
+# code entry
 
-predict('what do all turtles and tortoises breathe')
+# train()
+# predict('do female polar bears weight more than the male')
+pred_datas(train_data_raw, "seq2seq_result_train.csv")
+pred_datas(test_data_raw, "seq2seq_result_test.csv")
