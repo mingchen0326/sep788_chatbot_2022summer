@@ -24,7 +24,7 @@ def eval_dir(path):
         prediction = vail_df['Predictive Answer']
         accuracy = eval(answer, prediction)
         print(f)
-        print(accuracy)
+        # print(accuracy)
         print(np.mean(accuracy))
 
 eval_dir("Results")
