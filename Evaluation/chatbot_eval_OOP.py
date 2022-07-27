@@ -27,6 +27,15 @@ def eval_dir(path):
         # print(accuracy)
         print(np.mean(accuracy))
 
+def eval_file(f):
+    vail_df = pd.read_csv(f)
+    answer = vail_df['Answer']
+    prediction = vail_df['Predictive Answer']
+    accuracy = eval(answer, prediction)
+    print(f)
+    # print(accuracy)
+    print(np.mean(accuracy))
+
 eval_dir("Results")
 
 
