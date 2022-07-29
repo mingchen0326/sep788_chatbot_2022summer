@@ -12,6 +12,7 @@ from torch import optim
 import torch.nn.functional as F
 import seq2seq_model as seq2seqModel
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 # config
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -112,12 +113,15 @@ def read_data(data):
 
 input_tensor, input_lang, target_tensor, target_lang = read_data(
     train_data_raw)
+input_tensor_eval, input_lang_eval, target_tensor_eval, target_lang_eval = read_data(
+    eval_data_raw)
+
 hidden_size = 256
 
 # train model
 
 
-def train(BATCH_SIZE=1, max_data=50000, min_loss=0.2):
+def train(BATCH_SIZE=1, max_data=50000, min_loss=0.01):
     print("training...")
     steps_per_epoch = len(input_tensor) // BATCH_SIZE
     print(steps_per_epoch)
@@ -136,8 +140,14 @@ def train(BATCH_SIZE=1, max_data=50000, min_loss=0.2):
         encoder.load_state_dict(checkpoint['modelA_state_dict'])
         decoder.load_state_dict(checkpoint['modelB_state_dict'])
 
+    SA = 3
+    last_loss_eval = 10
     total_loss = 0
+    total_loss_eval = 0
     batch_loss = 1
+    batch_loss_eval = 1
+    batch_loss_list = []
+    batch_loss_eval_list = []
     while batch_loss > min_loss:
         start_time_epoch = time.time()
         for i in tqdm(range(1, (max_data//BATCH_SIZE))):
@@ -146,17 +156,44 @@ def train(BATCH_SIZE=1, max_data=50000, min_loss=0.2):
             batch_loss = seq2seqModel.train_step(inp, targ, encoder, decoder, optim.SGD(
                 encoder.parameters(), lr=0.001), optim.SGD(decoder.parameters(), lr=0.01))
             total_loss += batch_loss
+            
+
+        for i in tqdm(range(1,len(input_tensor_eval))):
+            inp = input_tensor_eval[(i-1)*BATCH_SIZE:i*BATCH_SIZE]
+            targ = target_tensor_eval[(i-1)*BATCH_SIZE:i*BATCH_SIZE]
+            batch_loss_eval = seq2seqModel.train_step(inp, targ, encoder, decoder, optim.SGD(
+                encoder.parameters(), lr=0.001), optim.SGD(decoder.parameters(), lr=0.01))
+            total_loss_eval += batch_loss_eval
+            
+
+        batch_loss_list.append(batch_loss)
+        batch_loss_eval_list.append(batch_loss_eval)
+
+        if batch_loss_eval > last_loss_eval:
+            SA -= 1
+        
+        elif batch_loss_eval <= last_loss_eval:
+            SA = 3
+
+        last_loss_eval = batch_loss_eval
 
         step_time_epoch = (time.time() - start_time_epoch) / steps_per_epoch
         step_loss = total_loss / steps_per_epoch
         current_steps = +steps_per_epoch
         step_time_total = (time.time() - start_time) / current_steps
-        print('Total Step: {} Time per Step: {}  Last Step Time: {} Last Step Loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch,
-                                                                      batch_loss))
+        print('Total Step: {} Time per Step: {}  Last Step Time: {} Last Step Loss {:.4f} Last Eval Loss {:.4f}'.format(current_steps, step_time_total, step_time_epoch,
+                                                                      batch_loss, batch_loss_eval))
         torch.save({'modelA_state_dict': encoder.state_dict(),
                     'modelB_state_dict': decoder.state_dict()}, checkpoint_prefix)
         sys.stdout.flush()
 
+        if SA == 0:
+            print("SA triggered...")
+            break
+
+    showPlot(batch_loss_list, batch_loss_eval_list)
+
+        
 
 def predict(sentence, model_path='Seq2Seq/model.pt'):
     max_length_tar = MAX_LENGTH
@@ -224,10 +261,24 @@ def pred_datas(data, file_name):
     print("result save to %s" % (file_name))
     pass
 
+# Plotting loss
+
+
+def showPlot(train,val):
+    x1 = [x for x in range(1,len(train)+1)]
+    print(x1)
+    train_loss = plt.plot(x1, train, label="train loss")
+    val_loss = plt.plot(x1, val, label="validation loss")
+    plt.title("Train loss VS. Val loss")
+    plt.xlabel("iter")
+    plt.ylabel("loss")
+    plt.legend()
+    plt.show()
+
 
 # code entry
 
-# train()
+train()
 # predict('do female polar bears weight more than the male')
 pred_datas(train_data_raw, "seq2seq_result_train.csv")
 pred_datas(test_data_raw, "seq2seq_result_test.csv")
