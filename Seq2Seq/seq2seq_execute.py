@@ -175,6 +175,8 @@ def train(BATCH_SIZE=1, max_data=50000, min_loss=0.01):
         elif batch_loss_eval <= last_loss_eval:
             SA = 3
 
+        last_loss_eval = batch_loss_eval
+
         step_time_epoch = (time.time() - start_time_epoch) / steps_per_epoch
         step_loss = total_loss / steps_per_epoch
         current_steps = +steps_per_epoch
@@ -186,6 +188,7 @@ def train(BATCH_SIZE=1, max_data=50000, min_loss=0.01):
         sys.stdout.flush()
 
         if SA == 0:
+            print("SA triggered...")
             break
 
     showPlot(batch_loss_list, batch_loss_eval_list)
