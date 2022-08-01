@@ -1,7 +1,6 @@
 import tensorflow as tf
 import numpy as np
 import pandas as pd
-import nltk
 from keras.preprocessing.text import Tokenizer
 from keras_preprocessing.sequence import pad_sequences 
 #if not work, use the import command in below comments
